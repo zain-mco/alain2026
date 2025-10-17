@@ -4082,6 +4082,7 @@ body {
 
     .chairman-profile {
         flex-direction: column;
+        align-items: center;
         text-align: center;
     }
 
@@ -4816,6 +4817,7 @@ body.menu-open {
 
 /* Large Tablets & Small Desktops (768px - 1024px) */
 @media (max-width: 1024px) {
+
     /* Section 1 - Brain Landing */
     .magical-stroke-text {
         font-size: 3vw;
@@ -4907,6 +4909,7 @@ body.menu-open {
 
 /* Tablets (768px - 900px) */
 @media (max-width: 900px) {
+
     /* Navigation improvements */
     .nav-links {
         padding-top: 35px;
@@ -5048,6 +5051,7 @@ body.menu-open {
 
 /* Mobile Landscape & Small Tablets (600px - 768px) */
 @media (max-width: 768px) {
+
     /* Global adjustments */
     section {
         min-height: auto;
@@ -5383,6 +5387,7 @@ body.menu-open {
 
 /* Mobile Portrait (480px - 600px) */
 @media (max-width: 600px) {
+
     /* Section 2 - Conference */
     .conference-title .event-type {
         font-size: 1.8rem;
@@ -5447,6 +5452,7 @@ body.menu-open {
 
 /* Small Mobile (320px - 480px) */
 @media (max-width: 480px) {
+
     /* Navigation */
     .nav-logo img {
         height: 45px;
