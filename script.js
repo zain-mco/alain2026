@@ -1,9 +1,13 @@
 // Global variables
 let scene, camera, renderer, brain, interiorScene, interiorCamera, interiorRenderer;
 let mouse = { x: 0, y: 0 };
+let mouseWorldPos = new THREE.Vector3();
+let raycaster = new THREE.Raycaster();
 let isLoaded = false;
 let currentSection = 1;
 let neuralCanvas, neuralCtx;
+let isMobile = false;
+let isTablet = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function () {
@@ -303,10 +307,36 @@ function initThreeJS() {
     // Neural pathways and particles are now added in the loader callbacks
     // after the brain model is successfully loaded
 
-    camera.position.z = 5;
+    // Set camera position based on device
+    updateCameraForDevice();
 
     // Start render loop
     animate();
+}
+
+// Update camera and brain scale for device type
+function updateCameraForDevice() {
+    // Detect device type
+    const width = window.innerWidth;
+    isMobile = width <= 768;
+    isTablet = width > 768 && width <= 1024;
+
+    if (isMobile) {
+        camera.position.z = 7; // Pull back more for mobile
+        if (brain) {
+            brain.scale.set(0.7, 0.7, 0.7); // Smaller brain for mobile
+        }
+    } else if (isTablet) {
+        camera.position.z = 6; // Medium distance for tablet
+        if (brain) {
+            brain.scale.set(0.85, 0.85, 0.85); // Medium brain for tablet
+        }
+    } else {
+        camera.position.z = 5; // Normal distance for desktop
+        if (brain) {
+            brain.scale.set(1, 1, 1); // Full size for desktop
+        }
+    }
 }
 
 // Create procedural brain texture with MEDICAL-GRADE accuracy
@@ -875,59 +905,120 @@ function createNeuralPathways() {
     brain.userData.hasPathways = true;
 }
 
-// Create floating particles around brain for neural activity
+// Create star field around brain (not inside)
 function createBrainParticles() {
-    const particleCount = 400;
-    const particles = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
+    const starCount = 800; // More stars for full screen effect
+    const stars = new THREE.BufferGeometry();
+    const positions = new Float32Array(starCount * 3);
+    const colors = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
 
-    const color1 = new THREE.Color(0x6fa99a);
-    const color2 = new THREE.Color(0x708d7e);
-    const color3 = new THREE.Color(0xa69072);
+    // Star colors - white, blue-white, yellow-white
+    const starColors = [
+        new THREE.Color(0xffffff), // White
+        new THREE.Color(0xf0f8ff), // Blue-white
+        new THREE.Color(0xfffacd), // Yellow-white
+        new THREE.Color(0xe6f2ff), // Cool white
+    ];
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < starCount; i++) {
         const i3 = i * 3;
 
-        // Distribute particles in a shell around the brain
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
-        const radius = 1.8 + Math.random() * 0.8;
+        // Create stars in a large sphere around the scene (not near brain center)
+        let radius, x, y, z;
+        let distanceFromCenter;
 
-        positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-        positions[i3 + 1] = radius * Math.cos(phi);
-        positions[i3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+        do {
+            // Random position in a large sphere
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            radius = 3.5 + Math.random() * 8; // Far from brain (brain is at radius ~1.5-2)
 
-        // Random color selection
-        const colorChoice = Math.random();
-        const selectedColor = colorChoice < 0.4 ? color1 : (colorChoice < 0.7 ? color2 : color3);
+            x = radius * Math.sin(phi) * Math.cos(theta);
+            y = radius * Math.cos(phi);
+            z = radius * Math.sin(phi) * Math.sin(theta);
 
+            // Calculate distance from brain center
+            distanceFromCenter = Math.sqrt(x * x + y * y + z * z);
+        } while (distanceFromCenter < 3); // Ensure stars are outside brain area
+
+        positions[i3] = x;
+        positions[i3 + 1] = y;
+        positions[i3 + 2] = z;
+
+        // Random star color
+        const selectedColor = starColors[Math.floor(Math.random() * starColors.length)];
         colors[i3] = selectedColor.r;
         colors[i3 + 1] = selectedColor.g;
         colors[i3 + 2] = selectedColor.b;
 
-        sizes[i] = Math.random() * 2 + 0.5;
+        // Varied star sizes (some bright, some dim)
+        sizes[i] = Math.random() * 3 + 0.5;
     }
 
-    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    stars.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    stars.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    stars.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const particleMaterial = new THREE.PointsMaterial({
-        size: 0.04,
+    // Create star texture for point shape
+    const starTexture = createStarTexture();
+
+    const starMaterial = new THREE.PointsMaterial({
+        size: 0.08,
         vertexColors: true,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending,
-        sizeAttenuation: true
+        sizeAttenuation: true,
+        map: starTexture,
+        depthWrite: false
     });
 
-    const particleSystem = new THREE.Points(particles, particleMaterial);
-    scene.add(particleSystem);
+    const starSystem = new THREE.Points(stars, starMaterial);
+    scene.add(starSystem);
 
-    // Store reference for animation
-    brain.userData.particles = particleSystem;
+    // Store reference for animation (twinkling effect)
+    brain.userData.particles = starSystem;
+}
+
+// Create star-shaped texture for particles
+function createStarTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+
+    // Create star shape with glow
+    const centerX = 32;
+    const centerY = 32;
+
+    // Outer glow
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 32);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.9)');
+    gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+
+    // Add cross shape for star sparkle effect
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    // Horizontal line
+    ctx.fillRect(0, 30, 64, 4);
+    // Vertical line
+    ctx.fillRect(30, 0, 4, 64);
+    // Diagonal lines
+    ctx.save();
+    ctx.translate(32, 32);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-32, -2, 64, 4);
+    ctx.fillRect(-2, -32, 4, 64);
+    ctx.restore();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
 }
 
 // Interior 360° scene
@@ -1165,29 +1256,97 @@ function animate() {
             });
         }
 
-        // Animate floating particles
+        // Animate stars (twinkling effect + mouse interaction)
         if (brain.userData.particles) {
             const positions = brain.userData.particles.geometry.attributes.position.array;
             const sizes = brain.userData.particles.geometry.attributes.size.array;
+            const colors = brain.userData.particles.geometry.attributes.color.array;
+            const material = brain.userData.particles.material;
 
-            for (let i = 0; i < positions.length; i += 3) {
-                // Gentle floating motion
-                positions[i + 1] += Math.sin(time + i) * 0.002;
+            // Calculate mouse position in 3D world space
+            raycaster.setFromCamera(mouse, camera);
+            const distance = 10;
+            mouseWorldPos.copy(raycaster.ray.direction).multiplyScalar(distance).add(raycaster.ray.origin);
 
-                // Rotate particles around brain
-                const x = positions[i];
-                const z = positions[i + 2];
-                const angle = 0.0005;
-                positions[i] = x * Math.cos(angle) - z * Math.sin(angle);
-                positions[i + 2] = x * Math.sin(angle) + z * Math.cos(angle);
+            // Store original positions if not stored
+            if (!brain.userData.particleOriginalPositions) {
+                brain.userData.particleOriginalPositions = new Float32Array(positions.length);
+                for (let i = 0; i < positions.length; i++) {
+                    brain.userData.particleOriginalPositions[i] = positions[i];
+                }
+            }
 
-                // Pulsing size
-                const sizeIndex = i / 3;
-                sizes[sizeIndex] = (Math.sin(time * 2 + i) * 0.5 + 1.5) * 0.6;
+            const originalPositions = brain.userData.particleOriginalPositions;
+
+            // Twinkle effect + mouse interaction
+            for (let i = 0; i < sizes.length; i++) {
+                const i3 = i * 3;
+                const x = positions[i3];
+                const y = positions[i3 + 1];
+                const z = positions[i3 + 2];
+
+                // Calculate distance from mouse in 3D
+                const dx = x - mouseWorldPos.x;
+                const dy = y - mouseWorldPos.y;
+                const dz = z - mouseWorldPos.z;
+                const distToMouse = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                // Mouse repulsion effect (stars move away from mouse)
+                const repulsionRadius = 3.5;
+                if (distToMouse < repulsionRadius) {
+                    const repulsionForce = (1 - distToMouse / repulsionRadius) * 0.5;
+                    positions[i3] += (dx / distToMouse) * repulsionForce;
+                    positions[i3 + 1] += (dy / distToMouse) * repulsionForce;
+                    positions[i3 + 2] += (dz / distToMouse) * repulsionForce;
+
+                    // Stars near mouse get brighter
+                    const brightnessFactor = 1 + repulsionForce * 2;
+                    colors[i3] = Math.min(1, colors[i3] * brightnessFactor);
+                    colors[i3 + 1] = Math.min(1, colors[i3 + 1] * brightnessFactor);
+                    colors[i3 + 2] = Math.min(1, colors[i3 + 2] * brightnessFactor);
+                } else {
+                    // Gradually return to original position
+                    const returnSpeed = 0.05;
+                    positions[i3] += (originalPositions[i3] - positions[i3]) * returnSpeed;
+                    positions[i3 + 1] += (originalPositions[i3 + 1] - positions[i3 + 1]) * returnSpeed;
+                    positions[i3 + 2] += (originalPositions[i3 + 2] - positions[i3 + 2]) * returnSpeed;
+
+                    // Return to original color
+                    const starColors = [
+                        { r: 1, g: 1, b: 1 },
+                        { r: 0.941, g: 0.973, b: 1 },
+                        { r: 1, g: 0.980, b: 0.804 },
+                        { r: 0.902, g: 0.949, b: 1 }
+                    ];
+                    const targetColor = starColors[i % 4];
+                    colors[i3] += (targetColor.r - colors[i3]) * 0.05;
+                    colors[i3 + 1] += (targetColor.g - colors[i3 + 1]) * 0.05;
+                    colors[i3 + 2] += (targetColor.b - colors[i3 + 2]) * 0.05;
+                }
+
+                // Create twinkling by varying size and using unique offset per star
+                const twinkleSpeed = 0.5 + (i % 10) * 0.3;
+                const twinkleOffset = i * 0.628;
+                const twinkle = Math.sin(time * twinkleSpeed + twinkleOffset) * 0.5 + 0.5;
+                
+                // Some stars twinkle more dramatically than others
+                const baseSize = 0.5 + (i % 5) * 0.3;
+                sizes[i] = baseSize + twinkle * 1.5;
+
+                // Stars near mouse get bigger
+                if (distToMouse < repulsionRadius) {
+                    const sizeFactor = 1 + (1 - distToMouse / repulsionRadius) * 1.5;
+                    sizes[i] *= sizeFactor;
+                }
             }
 
             brain.userData.particles.geometry.attributes.position.needsUpdate = true;
             brain.userData.particles.geometry.attributes.size.needsUpdate = true;
+            brain.userData.particles.geometry.attributes.color.needsUpdate = true;
+
+            // Subtle overall opacity fade for atmospheric effect
+            const atmosphericPulse = Math.sin(time * 0.3) * 0.1 + 0.85;
+            material.opacity = atmosphericPulse;
         }
     }
 
@@ -1220,15 +1379,30 @@ function initScrollAnimations() {
 
                 // Scale the brain (opacity disabled - user controls it)
                 if (brain) {
-                    brain.scale.setScalar(1 + progress * 2);
+                    // Get base scale based on device
+                    let baseScale = 1;
+                    if (isMobile) {
+                        baseScale = 0.7;
+                    } else if (isTablet) {
+                        baseScale = 0.85;
+                    }
+                    
+                    // Apply scroll scale on top of device scale
+                    brain.scale.setScalar(baseScale * (1 + progress * 2));
 
                     // OPACITY ANIMATION DISABLED - User sets opacity manually
                     // Keeping brain opacity constant as set by user
                 }
 
-                // Camera zoom
+                // Camera zoom - adjust for device
                 if (camera) {
-                    camera.position.z = 5 - progress * 4;
+                    let baseCameraZ = 5;
+                    if (isMobile) {
+                        baseCameraZ = 7;
+                    } else if (isTablet) {
+                        baseCameraZ = 6;
+                    }
+                    camera.position.z = baseCameraZ - progress * 4;
                 }
 
                 // Magical text shrinks and moves down (going into brain)
@@ -1579,7 +1753,7 @@ function initEventListeners() {
                 e.preventDefault();
                 const targetId = href.substring(1);
                 const targetSection = document.getElementById(targetId);
-                
+
                 if (targetSection) {
                     targetSection.scrollIntoView({
                         behavior: 'smooth',
@@ -1599,10 +1773,18 @@ function initEventListeners() {
 
         // Only rotate in section 1
         if (currentSection === 1) {
+            // Adjust rotation sensitivity based on device
+            let rotationMultiplier = 0.3;
+            if (isMobile) {
+                rotationMultiplier = 0.15; // Less sensitive on mobile
+            } else if (isTablet) {
+                rotationMultiplier = 0.22; // Medium sensitivity on tablet
+            }
+            
             gsap.to(brain.rotation, {
                 duration: 2,
-                x: mouse.y * 0.3,
-                y: mouse.x * 0.3,
+                x: mouse.y * rotationMultiplier,
+                y: mouse.x * rotationMultiplier,
                 ease: "power2.out"
             });
         }
@@ -1636,6 +1818,9 @@ function initEventListeners() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Update brain scale and camera for device
+            updateCameraForDevice();
         }
 
         if (interiorCamera && interiorRenderer) {
