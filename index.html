@@ -51,66 +51,69 @@
 
     <!-- Section 1: Landing - Floating Brain Banner -->
     <section id="section-1" class="brain-landing" aria-label="Interactive brain landing section">
+        <img src="img/logo.png" alt="Logo Overlay" class="brain-logo-overlay">
         <div class="brain-container">
             <canvas id="brain-canvas" aria-label="Interactive 3D brain model that responds to mouse movement"></canvas>
+
         </div>
-        <div class="landing-content">
-
-            <h1 id="magical-title" class="magical-stroke-text">Welcome to the 3rd Al Ain Neurology Conference 2026</h1>
-
+        <div class="floating-particles brain-particles">
+            <div class="particle" style="--delay: 0s; --x: 3vw; --y: 8vh;"></div>
+            <div class="particle" style="--delay: 1s; --x: 12vw; --y: 22vh;"></div>
+            <div class="particle" style="--delay: 2s; --x: 23vw; --y: 15vh;"></div>
+            <div class="particle" style="--delay: 3s; --x: 35vw; --y: 28vh;"></div>
+            <div class="particle" style="--delay: 4s; --x: 47vw; --y: 18vh;"></div>
+            <div class="particle" style="--delay: 5s; --x: 58vw; --y: 32vh;"></div>
+            <div class="particle" style="--delay: 6s; --x: 68vw; --y: 12vh;"></div>
+            <div class="particle" style="--delay: 7s; --x: 78vw; --y: 25vh;"></div>
+            <div class="particle" style="--delay: 8s; --x: 88vw; --y: 20vh;"></div>
+            <div class="particle" style="--delay: 9s; --x: 96vw; --y: 10vh;"></div>
+            <div class="particle" style="--delay: 1.5s; --x: 8vw; --y: 55vh;"></div>
+            <div class="particle" style="--delay: 2.5s; --x: 18vw; --y: 68vh;"></div>
+            <div class="particle" style="--delay: 3.5s; --x: 28vw; --y: 62vh;"></div>
+            <div class="particle" style="--delay: 4.5s; --x: 38vw; --y: 72vh;"></div>
+            <div class="particle" style="--delay: 5.5s; --x: 50vw; --y: 65vh;"></div>
+            <div class="particle" style="--delay: 6.5s; --x: 62vw; --y: 78vh;"></div>
+            <div class="particle" style="--delay: 7.5s; --x: 72vw; --y: 70vh;"></div>
+            <div class="particle" style="--delay: 8.5s; --x: 82vw; --y: 75vh;"></div>
+            <div class="particle" style="--delay: 9.5s; --x: 92vw; --y: 82vh;"></div>
+            <div class="particle" style="--delay: 10s; --x: 15vw; --y: 42vh;"></div>
+            <div class="particle" style="--delay: 11s; --x: 40vw; --y: 48vh;"></div>
+            <div class="particle" style="--delay: 12s; --x: 65vw; --y: 45vh;"></div>
+            <div class="particle" style="--delay: 13s; --x: 85vw; --y: 52vh;"></div>
+            <div class="particle" style="--delay: 14s; --x: 50vw; --y: 5vh;"></div>
+            <div class="particle" style="--delay: 15s; --x: 50vw; --y: 92vh;"></div>
+            <div class="particle" style="--delay: 16s; --x: 5vw; --y: 35vh;"></div>
+            <div class="particle" style="--delay: 17s; --x: 95vw; --y: 38vh;"></div>
+            <div class="particle" style="--delay: 18s; --x: 25vw; --y: 85vh;"></div>
+            <div class="particle" style="--delay: 19s; --x: 75vw; --y: 88vh;"></div>
+            <div class="particle" style="--delay: 20s; --x: 10vw; --y: 95vh;"></div>
+        </div>
+        <div class="date-display-left">
+            <div class="date-line">09-11</div>
+            <div class="date-line">JAN 2026</div>
+            <div class="date-line">AL AIN, UAE</div>
+        </div>
+        <div class="countdown-display-right">
+            <div class="countdown-unit">
+                <span class="countdown-value" id="countdown-days">00</span>
+                <span class="countdown-label">DAYS</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-value" id="countdown-hours">00</span>
+                <span class="countdown-label">HOURS</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-value" id="countdown-minutes">00</span>
+                <span class="countdown-label">MINS</span>
+            </div>
+            <div class="countdown-unit">
+                <span class="countdown-value" id="countdown-seconds">00</span>
+                <span class="countdown-label">SECS</span>
+            </div>
         </div>
         <div class="scroll-indicator" aria-label="Scroll down to continue">
             <div class="scroll-arrow" aria-hidden="true"></div>
             <span>Scroll to explore</span>
-        </div>
-    </section>
-
-    <!-- Section 2: Conference Hero Inside Brain -->
-    <section id="section-2" class="brain-interior">
-        <!-- Conference Video Background -->
-
-        <div class="conference-content">
-            <!-- Left Side: Conference Info -->
-            <div class="conference-info-panel">
-                <div class="conference-badge">
-                    <span class="conference-number">3rd</span>
-                </div>
-                <h1 class="conference-title">
-                    <span class="location">AL AIN</span>
-                    <span class="event-type">NEUROLOGY</span>
-                    <span class="event-name">CONFERENCE 2026</span>
-                </h1>
-                <div class="date-display">
-                    <span class="full-date">09-11</span>
-                    <span class="month">JAN 2026</span>
-                    <span class="location">AL AIN, UAE</span>
-                </div>
-            </div>
-
-            <!-- Right Side: Countdown -->
-            <div class="countdown-panel">
-                <div class="countdown-container">
-                    <h3 class="countdown-title">Conference Starts In</h3>
-                    <div class="countdown-timer" id="countdown-timer">
-                        <div class="time-unit">
-                            <span class="time-value" id="days">00</span>
-                            <span class="time-label">Days</span>
-                        </div>
-                        <div class="time-unit">
-                            <span class="time-value" id="hours">00</span>
-                            <span class="time-label">Hours</span>
-                        </div>
-                        <div class="time-unit">
-                            <span class="time-value" id="minutes">00</span>
-                            <span class="time-label">Minutes</span>
-                        </div>
-                        <div class="time-unit">
-                            <span class="time-value" id="seconds">00</span>
-                            <span class="time-label">Seconds</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 

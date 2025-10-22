@@ -13,11 +13,12 @@ let isTablet = false;
 document.addEventListener('DOMContentLoaded', function () {
     initLoading();
     initThreeJS();
-    initInteriorScene();
+    // initInteriorScene(); // Removed - Section 2 deleted
     initNeuralAnimation();
     initScrollAnimations();
     initEventListeners();
-    initCountdownTimer();
+    initCountdownTimer(); // Re-add countdown timer
+    // initParticleMouseEffect(); // Removed - particles move on their own in slow motion
 
     // Hide loading screen after everything is loaded
     setTimeout(() => {
@@ -58,14 +59,14 @@ function initThreeJS() {
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x000000, 8, 15);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, 1400 / 700, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({
         canvas: canvas,
         alpha: true,
         antialias: true,
         powerPreference: "high-performance"
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(1400, 700);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
@@ -87,8 +88,8 @@ function initThreeJS() {
         (gltf) => {
             brain = gltf.scene;
 
-            // Scale the model to appropriate size
-            brain.scale.set(1.5, 1.5, 1.5);
+            // Scale the model to appropriate size - smaller to fit under logo
+            brain.scale.set(0.5, 0.5, 0.5);
 
             // Apply beautiful GREEN-TO-ORANGE GRADIENT
             // Get brain bounding box for gradient calculation
@@ -112,67 +113,14 @@ function initThreeJS() {
                         child.material.metalnessMap = null;
                         child.material.aoMap = null;
 
-                        // Enable vertex colors for gradient
-                        child.material.vertexColors = true;
-
-                        // Create gradient colors on vertices
-                        const colors = [];
-                        const positions = child.geometry.attributes.position;
-
-                        // Define 7-tone REALISTIC HUMAN BRAIN gradient (smooth transitions)
-                        const brainShades = [
-                            new THREE.Color(0x6e938e),  // 1. Deep tissue (darkest gray-pink)
-                            new THREE.Color(0xacd2c5),  // 2. White matter (gray-pink)
-                            new THREE.Color(0x946a50),  // 3. Transition zone (medium pink-gray)
-                            new THREE.Color(0xacd2c5),  // 4. Gray matter (pink-beige)
-                            new THREE.Color(0x4b4c2a),  // 5. Upper cortex (light beige-pink)
-                            new THREE.Color(0x6e938e),  // 6. Surface layer (very light)
-                            new THREE.Color(0x4b4c2a)   // 7. Outer surface (lightest beige-pink)
-                        ];
-
-                        for (let i = 0; i < positions.count; i++) {
-                            const y = positions.getY(i);
-
-                            // Calculate gradient factor (0 = bottom, 1 = top)
-                            const gradientFactor = (y - minY) / (maxY - minY);
-
-                            // Determine which two colors to blend between
-                            const colorCount = brainShades.length;
-                            const scaledFactor = gradientFactor * (colorCount - 1);
-                            const lowerIndex = Math.floor(scaledFactor);
-                            const upperIndex = Math.min(lowerIndex + 1, colorCount - 1);
-                            const localFactor = scaledFactor - lowerIndex;
-
-                            // Blend between adjacent colors for smooth transitions
-                            const color = new THREE.Color().lerpColors(
-                                brainShades[lowerIndex],
-                                brainShades[upperIndex],
-                                localFactor
-                            );
-
-                            colors.push(color.r, color.g, color.b);
-                        }
-
-                        // Apply vertex colors
-                        child.geometry.setAttribute('color',
-                            new THREE.Float32BufferAttribute(colors, 3)
-                        );
-
-                        // Material properties for realistic human brain
-                        child.material.roughness = 0.75;
-                        child.material.metalness = 0.02;
-                        child.material.emissive = new THREE.Color(0xd4a599); // Subtle pink-beige glow
-                        child.material.emissiveIntensity = 0.15;
-
-                        // Add slight transparency for ethereal look
+                        // Simple material - no complex gradients
+                        child.material.color = new THREE.Color(0x6fa99a);
+                        child.material.roughness = 0.7;
+                        child.material.metalness = 0.1;
+                        child.material.emissive = new THREE.Color(0x6fa99a);
+                        child.material.emissiveIntensity = 0.2;
                         child.material.transparent = true;
-                        child.material.opacity = 0.9; // Slightly transparent (85% solid)
-
-                        // Add neural overlay texture
-                        child.material.map = createNeuralOverlayTexture();
-                        child.material.map.wrapS = THREE.RepeatWrapping;
-                        child.material.map.wrapT = THREE.RepeatWrapping;
-
+                        child.material.opacity = 0.85;
                         child.material.needsUpdate = true;
                     }
                 }
@@ -180,8 +128,8 @@ function initThreeJS() {
 
             scene.add(brain);
 
-            // Add MAGICAL neural veins extending outward
-            createMagicalNeuralVeins(brain);
+            // Neural veins removed as per user request
+            // createMagicalNeuralVeins(brain);
 
             // Add neural pathways and particles AFTER brain is loaded
             createNeuralPathways();
@@ -324,17 +272,17 @@ function updateCameraForDevice() {
     if (isMobile) {
         camera.position.z = 7; // Pull back more for mobile
         if (brain) {
-            brain.scale.set(0.7, 0.7, 0.7); // Smaller brain for mobile
+            brain.scale.set(0.35, 0.35, 0.35); // Smaller brain for mobile
         }
     } else if (isTablet) {
         camera.position.z = 6; // Medium distance for tablet
         if (brain) {
-            brain.scale.set(0.85, 0.85, 0.85); // Medium brain for tablet
+            brain.scale.set(0.4, 0.4, 0.4); // Medium brain for tablet
         }
     } else {
         camera.position.z = 5; // Normal distance for desktop
         if (brain) {
-            brain.scale.set(1, 1, 1); // Full size for desktop
+            brain.scale.set(0.5, 0.5, 0.5); // Smaller brain for desktop - fits under logo
         }
     }
 }
@@ -1328,7 +1276,7 @@ function animate() {
                 const twinkleSpeed = 0.5 + (i % 10) * 0.3;
                 const twinkleOffset = i * 0.628;
                 const twinkle = Math.sin(time * twinkleSpeed + twinkleOffset) * 0.5 + 0.5;
-                
+
                 // Some stars twinkle more dramatically than others
                 const baseSize = 0.5 + (i % 5) * 0.3;
                 sizes[i] = baseSize + twinkle * 1.5;
@@ -1367,10 +1315,10 @@ function animate() {
 function initScrollAnimations() {
     gsap.registerPlugin(ScrollTrigger);
 
-    // Section 1 to Section 2 transition
+    // Section 1 to Section 3 transition (Section 2 removed)
     gsap.timeline({
         scrollTrigger: {
-            trigger: "#section-2",
+            trigger: "#section-3",
             start: "top bottom",
             end: "top top",
             scrub: 1,
@@ -1380,13 +1328,13 @@ function initScrollAnimations() {
                 // Scale the brain (opacity disabled - user controls it)
                 if (brain) {
                     // Get base scale based on device
-                    let baseScale = 1;
+                    let baseScale = 0.5;
                     if (isMobile) {
-                        baseScale = 0.7;
+                        baseScale = 0.35;
                     } else if (isTablet) {
-                        baseScale = 0.85;
+                        baseScale = 0.4;
                     }
-                    
+
                     // Apply scroll scale on top of device scale
                     brain.scale.setScalar(baseScale * (1 + progress * 2));
 
@@ -1405,7 +1353,7 @@ function initScrollAnimations() {
                     camera.position.z = baseCameraZ - progress * 4;
                 }
 
-                // Magical text shrinks and moves down (going into brain)
+                // Magical text shrinks and moves down (going into brain) - removed since no magical-title exists
                 const magicalTitle = document.getElementById('magical-title');
                 if (magicalTitle) {
                     // Start at full size (2vw fits on one line), shrink to 0.8vw (very tiny)
@@ -1492,39 +1440,6 @@ function initScrollAnimations() {
         );
     }
 
-    // Conference content animations
-    if (document.querySelector('.brain-interior')) {
-        const timeline = gsap.timeline({
-            scrollTrigger: {
-                trigger: ".brain-interior",
-                start: "top 80%",
-                end: "bottom 20%",
-                toggleActions: "play none none reverse"
-            }
-        });
-
-        if (document.querySelector('.conference-badge')) {
-            timeline.fromTo('.conference-badge', { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 });
-        }
-        if (document.querySelector('.conference-title .location')) {
-            timeline.fromTo('.conference-title .location', { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5 }, "-=0.4");
-        }
-        if (document.querySelector('.conference-title .event-type')) {
-            timeline.fromTo('.conference-title .event-type', { x: 50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5 }, "-=0.3");
-        }
-        if (document.querySelector('.conference-title .event-name')) {
-            timeline.fromTo('.conference-title .event-name', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, "-=0.2");
-        }
-        if (document.querySelector('.date-display')) {
-            timeline.fromTo('.date-display', { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6 }, "-=0.2");
-        }
-        if (document.querySelector('.countdown-container')) {
-            timeline.fromTo('.countdown-container', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, "-=0.3");
-        }
-        if (document.querySelector('.stat-item')) {
-            timeline.fromTo('.stat-item', { y: 20, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.4 }, "-=0.2");
-        }
-    }
 
     // Chairman section animations
     if (document.querySelector('.chairman-image')) {
@@ -1780,7 +1695,7 @@ function initEventListeners() {
             } else if (isTablet) {
                 rotationMultiplier = 0.22; // Medium sensitivity on tablet
             }
-            
+
             gsap.to(brain.rotation, {
                 duration: 2,
                 x: mouse.y * rotationMultiplier,
@@ -1802,7 +1717,7 @@ function initEventListeners() {
         });
     }
 
-    // Scroll detection for current section
+    // Scroll detection for current section and brain expansion
     window.addEventListener('scroll', () => {
         const scrollY = window.scrollY;
         const windowHeight = window.innerHeight;
@@ -1810,15 +1725,44 @@ function initEventListeners() {
 
         // Update navigation active state
         updateActiveNavigation();
+
+        // Expand brain on scroll
+        const brainContainer = document.querySelector('.brain-container');
+        if (brainContainer) {
+            const scrollProgress = Math.min(scrollY / windowHeight, 1);
+            
+            // Calculate new dimensions
+            const startWidth = 1400;
+            const startHeight = 700;
+            const endWidth = window.innerWidth;
+            const endHeight = window.innerHeight;
+            
+            const currentWidth = startWidth + (endWidth - startWidth) * scrollProgress;
+            const currentHeight = startHeight + (endHeight - startHeight) * scrollProgress;
+            
+            // Apply new size
+            brainContainer.style.width = `${currentWidth}px`;
+            brainContainer.style.height = `${currentHeight}px`;
+            
+            const canvas = document.getElementById('brain-canvas');
+            if (canvas && renderer && camera) {
+                canvas.style.width = `${currentWidth}px`;
+                canvas.style.height = `${currentHeight}px`;
+                renderer.setSize(currentWidth, currentHeight);
+                camera.aspect = currentWidth / currentHeight;
+                camera.updateProjectionMatrix();
+            }
+        }
     });
 
-    // Window resize
+    // Window resize - keep brain at fixed 1400x700 size
     window.addEventListener('resize', () => {
         if (camera && renderer) {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            // Keep fixed aspect ratio for brain
+            camera.aspect = 1400 / 700;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            
+            renderer.setSize(1400, 700);
+
             // Update brain scale and camera for device
             updateCameraForDevice();
         }
@@ -1848,70 +1792,57 @@ function initCountdownTimer() {
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
             // Update DOM elements
-            const daysEl = document.getElementById('days');
-            const hoursEl = document.getElementById('hours');
-            const minutesEl = document.getElementById('minutes');
-            const secondsEl = document.getElementById('seconds');
+            const daysEl = document.getElementById('countdown-days');
+            const hoursEl = document.getElementById('countdown-hours');
+            const minutesEl = document.getElementById('countdown-minutes');
+            const secondsEl = document.getElementById('countdown-seconds');
 
-            // Smart formatting: 3 digits if >= 100, 2 digits if < 100
-            if (daysEl) daysEl.textContent = days >= 100 ? days.toString().padStart(3, '0') : days.toString().padStart(2, '0');
+            if (daysEl) daysEl.textContent = days.toString().padStart(2, '0');
             if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
             if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
-            if (secondsEl) {
-                // Add pulse animation when seconds change
-                const oldSeconds = secondsEl.textContent;
-                const newSeconds = seconds.toString().padStart(2, '0');
-
-                if (oldSeconds !== newSeconds) {
-                    secondsEl.parentElement.classList.add('pulse');
-                    setTimeout(() => {
-                        secondsEl.parentElement.classList.remove('pulse');
-                    }, 500);
-                }
-
-                secondsEl.textContent = newSeconds;
-            }
-        } else {
-            // Conference has started
-            const daysEl = document.getElementById('days');
-            const hoursEl = document.getElementById('hours');
-            const minutesEl = document.getElementById('minutes');
-            const secondsEl = document.getElementById('seconds');
-
-            if (daysEl) daysEl.textContent = '00';
-            if (hoursEl) hoursEl.textContent = '00';
-            if (minutesEl) minutesEl.textContent = '00';
-            if (secondsEl) secondsEl.textContent = '00';
-
-            // Update countdown title
-            const titleEl = document.querySelector('.countdown-title');
-            if (titleEl) {
-                titleEl.textContent = 'Conference is Live!';
-                titleEl.style.color = '#6fa99a';
-            }
+            if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
         }
     }
 
     // Update countdown immediately and then every second
     updateCountdown();
     setInterval(updateCountdown, 1000);
+}
 
-    // Add hover effects to time units
-    document.querySelectorAll('.time-unit').forEach(unit => {
-        unit.addEventListener('mouseenter', () => {
-            gsap.to(unit, {
-                duration: 0.3,
-                scale: 1.05,
-                ease: "power2.out"
-            });
+// Particle Mouse Interaction - Keep animation running always
+function initParticleMouseEffect() {
+    const section = document.querySelector('.brain-landing');
+    const particles = document.querySelectorAll('.brain-particles .particle');
+    
+    if (!section || particles.length === 0) return;
+    
+    section.addEventListener('mousemove', (e) => {
+        const rect = section.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        particles.forEach(particle => {
+            const particleRect = particle.getBoundingClientRect();
+            const particleX = particleRect.left + particleRect.width / 2 - rect.left;
+            const particleY = particleRect.top + particleRect.height / 2 - rect.top;
+            
+            const deltaX = mouseX - particleX;
+            const deltaY = mouseY - particleY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // Add glow effect when mouse is near (but don't pause animation)
+            if (distance < 200) {
+                const force = (200 - distance) / 200;
+                particle.style.boxShadow = `0 0 ${30 * force}px rgba(111, 169, 154, ${force})`;
+            } else {
+                particle.style.boxShadow = '';
+            }
         });
-
-        unit.addEventListener('mouseleave', () => {
-            gsap.to(unit, {
-                duration: 0.3,
-                scale: 1,
-                ease: "power2.out"
-            });
+    });
+    
+    section.addEventListener('mouseleave', () => {
+        particles.forEach(particle => {
+            particle.style.boxShadow = '';
         });
     });
 }
